@@ -2,12 +2,10 @@ name: Build kernel debs
 
 on:
   workflow_dispatch:
-  schedule:
-      # * is a special character in YAML so you have to quote this string
-      - cron:  '0 2 * * 6'
+
 jobs:
   build-kernel-debs:
-    runs-on: [pve-kernel]
+    runs-on: ubuntu-latest
     container:
       image: aterfax/relaxable-rmrr-proxmox-kernel-builder:latest
       options: -v ${{ github.workspace }}:/build/proxmox/proxmox-kernel #Note this is technically a very bad idea if your Runner is doing more than this sole action due to environment pollution.
@@ -16,6 +14,9 @@ jobs:
     
     - name: Pre-clean up debs if present
       run: bash -c 'if [[ -d "/build/proxmox/proxmox-kernel/debs" ]]; then rm -rf /build/proxmox/proxmox-kernel/debs; fi'
+
+    - name: Specify version in build script
+      run:  sed -i 's/master/pve-kernel-5.15/g' /build/proxmox/build_latest.sh
       
     - name: Build kernel
       run: cd /build/proxmox/ && ./build_latest.sh
